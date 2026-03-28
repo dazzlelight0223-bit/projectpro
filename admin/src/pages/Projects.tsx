@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import AddProjectModal from '../components/AddProjectModal'
 import SuccessModal from '../components/SuccessModal'
+import DeleteConfirmModal from '../components/DeleteConfirmModal'
 import { Search, Edit2, Trash2, Plus } from 'lucide-react'
 
 interface Project {
@@ -34,6 +35,9 @@ export default function Projects() {
   const [isSaving, setIsSaving] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | number | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     fetchProjects()
@@ -101,22 +105,39 @@ export default function Projects() {
     }
   }
 
-  const handleDelete = async (id: string | number) => {
-    if (confirm('確定要刪除此項目嗎?')) {
-      try {
-        const { error } = await supabase
-          .from('projects')
-          .delete()
-          .eq('id', id)
+  const handleDeleteClick = (id: string | number) => {
+    setDeleteTargetId(id)
+    setDeleteConfirmOpen(true)
+  }
 
-        if (error) throw error
+  const handleDeleteConfirm = async () => {
+    if (deleteTargetId === null) return
+    
+    try {
+      setIsDeleting(true)
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', deleteTargetId)
 
-        setProjects(projects.filter((p) => p.id !== id))
-      } catch (error) {
-        console.error('Failed to delete project:', error)
-        alert('刪除項目失敗')
-      }
+      if (error) throw error
+
+      setProjects(projects.filter((p) => p.id !== deleteTargetId))
+      setDeleteConfirmOpen(false)
+      setDeleteTargetId(null)
+      setSuccessMessage('項目已成功刪除')
+      setShowSuccess(true)
+    } catch (error) {
+      console.error('Failed to delete project:', error)
+      alert('刪除項目失敗：' + (error as any).message)
+    } finally {
+      setIsDeleting(false)
     }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmOpen(false)
+    setDeleteTargetId(null)
   }
 
   return (
@@ -192,7 +213,7 @@ export default function Projects() {
                         <Edit2 size={18} />
                       </button>
                       <button
-                        onClick={() => handleDelete(project.id)}
+                        onClick={() => handleDeleteClick(project.id)}
                         className="text-red-600 hover:text-red-700 transition-colors"
                       >
                         <Trash2 size={18} />
@@ -217,6 +238,15 @@ export default function Projects() {
         isOpen={showSuccess}
         message={successMessage}
         onClose={() => setShowSuccess(false)}
+      />
+
+      <DeleteConfirmModal
+        isOpen={deleteConfirmOpen}
+        title="確認刪除項目"
+        message="確定要刪除此項目嗎？此操作無法撤銷。"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        isLoading={isDeleting}
       />
     </div>
   )
