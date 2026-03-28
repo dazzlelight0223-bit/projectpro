@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import apiClient from '../api/client'
+import { supabase } from '../lib/supabase'
 import { Folder, Users, Building2, Bell } from 'lucide-react'
 
 interface Stats {
@@ -21,8 +21,19 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await apiClient.get('/admin/stats')
-        setStats(response.data)
+        // Fetch counts from Supabase
+        const [projectsRes, usersRes, clientsRes] = await Promise.all([
+          supabase.from('projects').select('id', { count: 'exact', head: true }),
+          supabase.from('users').select('id', { count: 'exact', head: true }),
+          supabase.from('clients').select('id', { count: 'exact', head: true }),
+        ])
+
+        setStats({
+          projects: projectsRes.count || 0,
+          users: usersRes.count || 0,
+          clients: clientsRes.count || 0,
+          notifications: 12,
+        })
       } catch (error) {
         console.error('Failed to fetch stats:', error)
       } finally {

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import apiClient from '../api/client'
+import { supabase } from '../lib/supabase'
 import { Search, Edit2, Trash2, Plus } from 'lucide-react'
 
 interface User {
-  id: string
+  id: string | number
   email: string
   name: string
   role: string
@@ -18,8 +18,14 @@ export default function Users() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await apiClient.get('/admin/users')
-        setUsers(response.data)
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .order('createdAt', { ascending: false })
+
+        if (error) throw error
+
+        setUsers(data || [])
       } catch (error) {
         console.error('Failed to fetch users:', error)
       } finally {
@@ -36,10 +42,16 @@ export default function Users() {
       u.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string | number) => {
     if (confirm('確定要刪除此用戶嗎?')) {
       try {
-        await apiClient.delete(`/admin/users/${id}`)
+        const { error } = await supabase
+          .from('users')
+          .delete()
+          .eq('id', id)
+
+        if (error) throw error
+
         setUsers(users.filter((u) => u.id !== id))
       } catch (error) {
         console.error('Failed to delete user:', error)

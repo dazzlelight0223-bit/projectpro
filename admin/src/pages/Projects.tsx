@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import apiClient from '../api/client'
+import { supabase } from '../lib/supabase'
 import AddProjectModal from '../components/AddProjectModal'
 import { Search, Edit2, Trash2, Plus } from 'lucide-react'
 
 interface Project {
-  id: string
+  id: string | number
   name: string
   fullName: string
   shortName: string
@@ -25,10 +25,20 @@ export default function Projects() {
   const fetchProjects = async () => {
     try {
       setLoading(true)
-      const response = await apiClient.get('/admin/projects')
-      setProjects(response.data)
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('createdAt', { ascending: false })
+
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
+
+      setProjects(data || [])
     } catch (error) {
       console.error('Failed to fetch projects:', error)
+      alert('無法加載項目，請檢查 Supabase 連接')
     } finally {
       setLoading(false)
     }
@@ -43,25 +53,49 @@ export default function Projects() {
   const handleAddProject = async (projectData: { name: string; fullName: string; shortName: string }) => {
     try {
       setIsSaving(true)
-      const response = await apiClient.post('/admin/projects', projectData)
-      setProjects([...projects, response.data])
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([{
+          name: projectData.name,
+          fullName: projectData.fullName,
+          shortName: projectData.shortName,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          status: 'active'
+        }])
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
+
+      setProjects([...projects, data])
       setIsModalOpen(false)
       alert('項目已成功添加')
     } catch (error) {
       console.error('Failed to add project:', error)
-      alert('添加項目失敗，請檢查後端連接')
+      alert('添加項目失敗：' + (error as any).message)
     } finally {
       setIsSaving(false)
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string | number) => {
     if (confirm('確定要刪除此項目嗎?')) {
       try {
-        await apiClient.delete(`/admin/projects/${id}`)
+        const { error } = await supabase
+          .from('projects')
+          .delete()
+          .eq('id', id)
+
+        if (error) throw error
+
         setProjects(projects.filter((p) => p.id !== id))
       } catch (error) {
         console.error('Failed to delete project:', error)
+        alert('刪除項目失敗')
       }
     }
   }
