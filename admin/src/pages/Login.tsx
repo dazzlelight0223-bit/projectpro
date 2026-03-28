@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import apiClient from '../api/client'
 
 interface LoginProps {
   onLogin: () => void
@@ -17,15 +16,15 @@ export default function Login({ onLogin }: LoginProps) {
     setLoading(true)
 
     try {
-      const response = await apiClient.post('/admin/login', {
-        email,
-        password,
-      })
-
-      localStorage.setItem('token', response.data.token)
-      onLogin()
+      // 簡單的本地驗證（測試帳戶）
+      if (email === 'admin@example.com' && password === 'password') {
+        localStorage.setItem('token', 'test-token-' + Date.now())
+        onLogin()
+      } else {
+        setError('電子郵件或密碼不正確')
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || '登入失敗')
+      setError('登入失敗')
     } finally {
       setLoading(false)
     }
