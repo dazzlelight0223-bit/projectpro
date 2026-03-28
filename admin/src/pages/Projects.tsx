@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import AddProjectModal from '../components/AddProjectModal'
+import SuccessModal from '../components/SuccessModal'
 import { Search, Edit2, Trash2, Plus } from 'lucide-react'
 
 interface Project {
@@ -17,6 +18,8 @@ export default function Projects() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     fetchProjects()
@@ -73,7 +76,8 @@ export default function Projects() {
 
       setProjects([...projects, data])
       setIsModalOpen(false)
-      alert('項目已成功添加')
+      setSuccessMessage('項目已成功添加')
+      setShowSuccess(true)
     } catch (error) {
       console.error('Failed to add project:', error)
       alert('添加項目失敗：' + (error as any).message)
@@ -192,6 +196,12 @@ export default function Projects() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleAddProject}
         isLoading={isSaving}
+      />
+
+      <SuccessModal
+        isOpen={showSuccess}
+        message={successMessage}
+        onClose={() => setShowSuccess(false)}
       />
     </div>
   )
