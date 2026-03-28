@@ -7,9 +7,23 @@ import { Search, Edit2, Trash2, Plus } from 'lucide-react'
 interface Project {
   id: string | number
   name: string
-  fullName: string
-  shortName: string
-  createdAt: string
+  fullName?: string
+  fullname?: string
+  shortName?: string
+  shortname?: string
+  createdAt?: string
+  createdat?: string
+}
+
+// Helper function to normalize field names
+function normalizeProject(project: any): Project {
+  return {
+    id: project.id,
+    name: project.name,
+    fullName: project.fullName || project.fullname || '',
+    shortName: project.shortName || project.shortname || '',
+    createdAt: project.createdAt || project.createdat || new Date().toISOString(),
+  }
 }
 
 export default function Projects() {
@@ -38,7 +52,7 @@ export default function Projects() {
         throw error
       }
 
-      setProjects(data || [])
+      setProjects((data || []).map(normalizeProject))
     } catch (error) {
       console.error('Failed to fetch projects:', error)
       alert('無法加載項目，請檢查 Supabase 連接')
@@ -53,7 +67,7 @@ export default function Projects() {
       p.fullName.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleAddProject = async (projectData: { name: string; fullName: string; shortName: string }) => {
+  const handleAddProject = async (projectData: { name: string; fullName: string; shortName: string; description?: string }) => {
     try {
       setIsSaving(true)
       const { data, error } = await supabase
@@ -62,6 +76,7 @@ export default function Projects() {
           name: projectData.name,
           fullName: projectData.fullName,
           shortName: projectData.shortName,
+          description: projectData.description || '',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           status: 'active'
@@ -74,7 +89,7 @@ export default function Projects() {
         throw error
       }
 
-      setProjects([...projects, data])
+      setProjects([...projects, normalizeProject(data)])
       setIsModalOpen(false)
       setSuccessMessage('項目已成功添加')
       setShowSuccess(true)
