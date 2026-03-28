@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 interface AddProjectModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (project: { name: string; fullName: string; shortName: string; description?: string }) => void
+  onSave: (project: any) => void
   isLoading?: boolean
 }
 
@@ -14,9 +14,12 @@ export default function AddProjectModal({ isOpen, onClose, onSave, isLoading = f
     fullName: '',
     shortName: '',
     description: '',
+    mentor: '',
+    website: '',
+    status: 'active',
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
@@ -28,7 +31,15 @@ export default function AddProjectModal({ isOpen, onClose, onSave, isLoading = f
     e.preventDefault()
     if (formData.name && formData.fullName && formData.shortName) {
       onSave(formData)
-      setFormData({ name: '', fullName: '', shortName: '', description: '' })
+      setFormData({
+        name: '',
+        fullName: '',
+        shortName: '',
+        description: '',
+        mentor: '',
+        website: '',
+        status: 'active',
+      })
     }
   }
 
@@ -54,7 +65,7 @@ export default function AddProjectModal({ isOpen, onClose, onSave, isLoading = f
             {/* Name Field */}
             <div>
               <label className="block text-lg font-semibold text-gray-900 mb-3">
-                項目名稱
+                項目名稱 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -70,7 +81,7 @@ export default function AddProjectModal({ isOpen, onClose, onSave, isLoading = f
             {/* Full Name Field */}
             <div>
               <label className="block text-lg font-semibold text-gray-900 mb-3">
-                全名
+                全名 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -86,7 +97,7 @@ export default function AddProjectModal({ isOpen, onClose, onSave, isLoading = f
             {/* Short Name Field */}
             <div>
               <label className="block text-lg font-semibold text-gray-900 mb-3">
-                簡稱
+                簡稱 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -97,6 +108,53 @@ export default function AddProjectModal({ isOpen, onClose, onSave, isLoading = f
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-base"
                 required
               />
+            </div>
+
+            {/* Mentor Field */}
+            <div>
+              <label className="block text-lg font-semibold text-gray-900 mb-3">
+                導師
+              </label>
+              <input
+                type="text"
+                name="mentor"
+                value={formData.mentor}
+                onChange={handleChange}
+                placeholder="導師名稱"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-base"
+              />
+            </div>
+
+            {/* Website Field */}
+            <div>
+              <label className="block text-lg font-semibold text-gray-900 mb-3">
+                網站
+              </label>
+              <input
+                type="url"
+                name="website"
+                value={formData.website}
+                onChange={handleChange}
+                placeholder="https://example.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-base"
+              />
+            </div>
+
+            {/* Status Field */}
+            <div>
+              <label className="block text-lg font-semibold text-gray-900 mb-3">
+                狀態
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-base"
+              >
+                <option value="active">活躍</option>
+                <option value="inactive">非活躍</option>
+                <option value="archived">已歸檔</option>
+              </select>
             </div>
 
             {/* Description Field */}
