@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { X } from 'lucide-react'
+import ConfirmModal from './ConfirmModal'
 
 interface AddProjectModalProps {
   isOpen: boolean
@@ -18,6 +19,8 @@ export default function AddProjectModal({ isOpen, onClose, onSave, isLoading = f
     website: '',
     status: 'active',
   })
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [pendingData, setPendingData] = useState<any>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -30,7 +33,14 @@ export default function AddProjectModal({ isOpen, onClose, onSave, isLoading = f
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (formData.name && formData.fullName && formData.shortName) {
-      onSave(formData)
+      setPendingData(formData)
+      setShowConfirm(true)
+    }
+  }
+
+  const handleConfirmSave = async () => {
+    if (pendingData) {
+      await onSave(pendingData)
       setFormData({
         name: '',
         fullName: '',
@@ -40,7 +50,14 @@ export default function AddProjectModal({ isOpen, onClose, onSave, isLoading = f
         website: '',
         status: 'active',
       })
+      setShowConfirm(false)
+      setPendingData(null)
     }
+  }
+
+  const handleCancelConfirm = () => {
+    setShowConfirm(false)
+    setPendingData(null)
   }
 
   if (!isOpen) return null
@@ -191,6 +208,18 @@ export default function AddProjectModal({ isOpen, onClose, onSave, isLoading = f
             </button>
           </div>
         </form>
+
+        {/* Confirm Modal */}
+        <ConfirmModal
+          isOpen={showConfirm}
+          title="確認新增項目"
+          message={`確定要新增項目「${pendingData?.name}」嗎？`}
+          confirmText="確認新增"
+          cancelText="返回編輯"
+          onConfirm={handleConfirmSave}
+          onCancel={handleCancelConfirm}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   )
